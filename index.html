@@ -1,1 +1,740 @@
 
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GreenRoute — Eco-Friendly Navigation</title>
+
+  <!-- Mapbox -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --bg:         #0d1a12;
+      --surface:    #132019;
+      --surface2:   #1a2d21;
+      --border:     rgba(255,255,255,0.07);
+      --green:      #4ade80;
+      --green-dim:  #22c55e;
+      --green-glow: rgba(74,222,128,0.15);
+      --amber:      #fbbf24;
+      --red:        #f87171;
+      --text:       #f0faf3;
+      --muted:      #7aab8a;
+      --panel-w:    380px;
+      --radius:     16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* ── Left Panel ── */
+    #panel {
+      width: var(--panel-w);
+      min-width: var(--panel-w);
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    /* ── Header ── */
+    .panel-header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(160deg, #1a3a24 0%, var(--surface) 100%);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--green);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .logo-text span { color: var(--green); }
+
+    .tagline {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      padding-left: 46px;
+    }
+
+    /* ── Search Section ── */
+    .search-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .input-dot {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .dot-origin { background: var(--green); }
+    .dot-dest   { background: var(--amber); border-radius: 3px; }
+
+    .route-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px 12px 34px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .route-input::placeholder { color: var(--muted); }
+
+    .route-input:focus {
+      border-color: var(--green-dim);
+      box-shadow: 0 0 0 3px var(--green-glow);
+    }
+
+    .connector {
+      position: absolute;
+      left: 18px;
+      top: 100%;
+      width: 2px;
+      height: 10px;
+      background: var(--border);
+      z-index: 1;
+    }
+
+    .btn-route {
+      width: 100%;
+      margin-top: 6px;
+      padding: 13px;
+      background: var(--green);
+      color: #0d1a12;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    }
+
+    .btn-route:hover {
+      background: #86efac;
+      box-shadow: 0 4px 20px var(--green-glow);
+    }
+
+    .btn-route:active { transform: scale(0.98); }
+
+    /* ── Mode Selector ── */
+    .mode-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .mode-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+    }
+
+    .mode-btn:hover { border-color: var(--green-dim); color: var(--text); }
+
+    .mode-btn.active {
+      background: var(--green-glow);
+      border-color: var(--green-dim);
+      color: var(--green);
+    }
+
+    .mode-icon { font-size: 20px; }
+    .mode-label { font-size: 11px; font-weight: 500; }
+
+    /* ── Results Section ── */
+    .results-section {
+      padding: 20px 24px;
+      flex: 1;
+    }
+
+    #results-placeholder {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--muted);
+    }
+
+    #results-placeholder .big-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    #results-placeholder p { font-size: 13px; line-height: 1.6; }
+
+    /* ── Route Cards ── */
+    .route-cards { display: flex; flex-direction: column; gap: 10px; }
+
+    .route-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      animation: slideIn 0.3s ease forwards;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .route-card:nth-child(1) { animation-delay: 0.05s; }
+    .route-card:nth-child(2) { animation-delay: 0.10s; }
+    .route-card:nth-child(3) { animation-delay: 0.15s; }
+    .route-card:nth-child(4) { animation-delay: 0.20s; }
+
+    .route-card:hover { border-color: rgba(255,255,255,0.15); }
+
+    .route-card.eco-best {
+      border-color: var(--green-dim);
+      background: linear-gradient(135deg, rgba(74,222,128,0.08) 0%, var(--surface2) 100%);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-mode {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .eco-badge {
+      background: var(--green);
+      color: #0d1a12;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .card-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      text-align: center;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 8px 4px;
+    }
+
+    .stat-val {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .stat-val.green { color: var(--green); }
+    .stat-val.red   { color: var(--red); }
+
+    .stat-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .savings-bar {
+      margin-top: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 20px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .savings-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-dim), var(--green));
+      border-radius: 20px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .savings-text {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .savings-text span { color: var(--green); font-weight: 600; }
+
+    /* ── Footer ── */
+    .panel-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Map ── */
+    #map {
+      flex: 1;
+      height: 100vh;
+    }
+
+    /* ── API Key Banner ── */
+    #api-banner {
+      position: absolute;
+      top: 0; left: var(--panel-w); right: 0;
+      background: linear-gradient(90deg, #7c3aed, #4f46e5);
+      color: white;
+      font-size: 13px;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    #api-banner code {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    #api-banner button {
+      margin-left: auto;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    #api-banner button:hover { background: rgba(255,255,255,0.3); }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Map controls override ── */
+    .mapboxgl-ctrl-group {
+      background: var(--surface) !important;
+      border: 1px solid var(--border) !important;
+    }
+
+    .mapboxgl-ctrl-group button {
+      background: transparent !important;
+      color: var(--muted) !important;
+    }
+
+    .mapboxgl-ctrl-attrib { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── LEFT PANEL ── -->
+<aside id="panel">
+
+  <div class="panel-header">
+    <div class="logo">
+      <div class="logo-icon">🌿</div>
+      <div class="logo-text">Green<span>Route</span></div>
+    </div>
+    <div class="tagline">Navigate smarter. Breathe easier.</div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="input-group" style="margin-bottom:16px;">
+      <span class="input-dot dot-origin"></span>
+      <input id="origin" class="route-input" type="text" placeholder="Starting point" />
+      <div class="connector"></div>
+    </div>
+    <div class="input-group">
+      <span class="input-dot dot-dest"></span>
+      <input id="destination" class="route-input" type="text" placeholder="Destination" />
+    </div>
+    <button class="btn-route" id="btn-find" onclick="findRoutes()">
+      Find Eco Routes →
+    </button>
+  </div>
+
+  <!-- Transport Mode -->
+  <div class="mode-section">
+    <div class="section-label">Show modes</div>
+    <div class="mode-grid">
+      <button class="mode-btn active" data-mode="driving"  onclick="toggleMode(this)">
+        <span class="mode-icon">🚗</span><span class="mode-label">Drive</span>
+      </button>
+      <button class="mode-btn active" data-mode="transit"  onclick="toggleMode(this)">
+        <span class="mode-icon">🚌</span><span class="mode-label">Transit</span>
+      </button>
+      <button class="mode-btn active" data-mode="cycling"  onclick="toggleMode(this)">
+        <span class="mode-icon">🚴</span><span class="mode-label">Cycle</span>
+      </button>
+      <button class="mode-btn active" data-mode="walking"  onclick="toggleMode(this)">
+        <span class="mode-icon">🚶</span><span class="mode-label">Walk</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section">
+    <div class="section-label">Route comparison</div>
+    <div id="results">
+      <div id="results-placeholder">
+        <div class="big-icon">🗺️</div>
+        <p>Enter a start and end point to see eco-friendly route options and their carbon impact.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    Emission factors: BEIS 2023 guidelines.<br>
+    Baseline comparison = average petrol car.
+  </div>
+
+</aside>
+
+<!-- ── MAP ── -->
+<div id="map"></div>
+
+
+
+<script>
+  // ════════════════════════════════════════════════
+  // CONFIG — Replace with your real Mapbox token
+  // Get one free at https://account.mapbox.com
+  // ════════════════════════════════════════════════
+  const MAPBOX_TOKEN = 'pk.eyJ1IjoicG9kc2lkIiwiYSI6ImNtbHIzc2tvZTA2em8zZG91MzAzbW5mNHgifQ.yEBBAAfZPIQBS76gS3vrqg';
+
+  // ── Emission Factors (grams CO₂ per km) ──
+  const EMISSION = {
+    driving: 170,   // avg petrol car
+    transit:  89,   // average bus/rail mix
+    cycling:   0,
+    walking:   0,
+  };
+
+  const MODE_META = {
+    driving: { label: 'Driving',      icon: '🚗', color: '#f87171' },
+    transit: { label: 'Public Transit', icon: '🚌', color: '#fbbf24' },
+    cycling: { label: 'Cycling',      icon: '🚴', color: '#4ade80' },
+    walking: { label: 'Walking',      icon: '🚶', color: '#4ade80' },
+  };
+
+  // Mapbox profile mapping
+  const MAPBOX_PROFILE = {
+    driving: 'mapbox/driving',
+    transit: 'mapbox/driving', // Mapbox doesn't have transit; use driving as proxy distance
+    cycling: 'mapbox/cycling',
+    walking: 'mapbox/walking',
+  };
+
+  // ── State ──
+  let activeModes = new Set(['driving','transit','cycling','walking']);
+  let map, originMarker, destMarker;
+  let routeLayers = [];
+
+  // ── Init Map ──
+  mapboxgl.accessToken = 'pk.eyJ1IjoicG9kc2lkIiwiYSI6ImNtbHIzc2tvZTA2em8zZG91MzAzbW5mNHgifQ.yEBBAAfZPIQBS76gS3vrqg';
+
+  map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [-0.127, 51.507], // default: London
+    zoom: 11,
+  });
+
+  map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+  // ── Mode toggle ──
+  function toggleMode(btn) {
+    const mode = btn.dataset.mode;
+    if (activeModes.has(mode)) {
+      activeModes.delete(mode);
+      btn.classList.remove('active');
+    } else {
+      activeModes.add(mode);
+      btn.classList.add('active');
+    }
+  }
+
+  // ── Geocode an address → [lng, lat] ──
+  async function geocode(query) {
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
+    const r = await fetch(url);
+    const d = await r.json();
+    if (!d.features || d.features.length === 0) throw new Error(`Could not find: ${query}`);
+    return d.features[0].center; // [lng, lat]
+  }
+
+  // ── Get route from Mapbox Directions ──
+  async function getRoute(origin, dest, profile) {
+    const url = `https://api.mapbox.com/directions/v5/${profile}/${origin[0]},${origin[1]};${dest[0]},${dest[1]}?geometries=geojson&access_token=${MAPBOX_TOKEN}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    if (!d.routes || d.routes.length === 0) return null;
+    return {
+      distance: d.routes[0].distance / 1000, // km
+      duration: d.routes[0].duration / 60,   // minutes
+      geometry: d.routes[0].geometry,
+    };
+  }
+
+  // ── Draw route on map ──
+  function drawRoute(id, geometry, color) {
+    if (map.getLayer(id)) map.removeLayer(id);
+    if (map.getSource(id)) map.removeSource(id);
+
+    map.addSource(id, { type: 'geojson', data: { type: 'Feature', geometry } });
+    map.addLayer({
+      id,
+      type: 'line',
+      source: id,
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': color, 'line-width': 4, 'line-opacity': 0.85 },
+    });
+    routeLayers.push(id);
+  }
+
+  function clearRoutes() {
+    routeLayers.forEach(id => {
+      if (map.getLayer(id)) map.removeLayer(id);
+      if (map.getSource(id)) map.removeSource(id);
+    });
+    routeLayers = [];
+  }
+
+  // ── Place/update markers ──
+  function placeMarker(lngLat, color, existing) {
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.style.cssText = `width:14px;height:14px;background:${color};border-radius:50%;border:2px solid white;box-shadow:0 0 8px ${color}`;
+    return new mapboxgl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+  }
+
+  // ── Humanise duration ──
+  function fmtTime(mins) {
+    if (mins < 60) return `${Math.round(mins)}m`;
+    return `${Math.floor(mins/60)}h ${Math.round(mins%60)}m`;
+  }
+
+  // ── Main find routes function ──
+  async function findRoutes() {
+    const originVal = document.getElementById('origin').value.trim();
+    const destVal   = document.getElementById('destination').value.trim();
+
+    if (!originVal || !destVal) {
+      alert('Please enter both a start and destination.');
+      return;
+    }
+
+    if (MAPBOX_TOKEN === 'YOUR_MAPBOX_TOKEN') {
+      alert('Please add your Mapbox API token in the JavaScript (search for YOUR_MAPBOX_TOKEN).');
+      return;
+    }
+
+    // Show loading
+    const resultsEl = document.getElementById('results');
+    resultsEl.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--muted)"><span class="spinner"></span>Finding routes…</div>`;
+
+    try {
+      // Geocode
+      const [originCoords, destCoords] = await Promise.all([
+        geocode(originVal),
+        geocode(destVal),
+      ]);
+
+      // Place markers
+      originMarker = placeMarker(originCoords, '#4ade80', originMarker);
+      destMarker   = placeMarker(destCoords,   '#fbbf24', destMarker);
+
+      // Fit map
+      const bounds = [
+        [Math.min(originCoords[0], destCoords[0]) - 0.01, Math.min(originCoords[1], destCoords[1]) - 0.01],
+        [Math.max(originCoords[0], destCoords[0]) + 0.01, Math.max(originCoords[1], destCoords[1]) + 0.01],
+      ];
+      map.fitBounds(bounds, { padding: { top: 60, bottom: 60, left: 60, right: 60 } });
+
+      // Fetch routes for active modes
+      clearRoutes();
+      const modesArr = [...activeModes];
+      const routeResults = await Promise.all(
+        modesArr.map(mode => getRoute(originCoords, destCoords, MAPBOX_PROFILE[mode]).then(r => ({ mode, ...r })))
+      );
+
+      const valid = routeResults.filter(r => r && r.distance);
+
+      // Draw routes on map
+      valid.forEach(r => drawRoute(`route-${r.mode}`, r.geometry, MODE_META[r.mode].color));
+
+      // Calculate emissions
+      const results = valid.map(r => ({
+        ...r,
+        co2:     r.distance * EMISSION[r.mode],
+        savings: r.distance * EMISSION.driving - r.distance * EMISSION[r.mode],
+      }));
+
+      // Sort: lowest emissions first
+      results.sort((a, b) => a.co2 - b.co2);
+
+      // Max savings (for bar scaling)
+      const maxSavings = Math.max(...results.map(r => r.savings), 1);
+
+      // Render cards
+      const cards = results.map((r, i) => {
+        const m = MODE_META[r.mode];
+        const isBest = i === 0 && r.savings > 0;
+        const savingsPct = Math.max(0, Math.round((r.savings / (r.distance * EMISSION.driving)) * 100));
+        const co2Display = r.co2 < 1 ? '0' : Math.round(r.co2);
+        const savingsDisplay = r.savings < 1 ? '0' : Math.round(r.savings);
+        const barWidth = r.savings <= 0 ? 0 : Math.round((r.savings / maxSavings) * 100);
+
+        return `
+          <div class="route-card ${isBest ? 'eco-best' : ''}">
+            <div class="card-top">
+              <div class="card-mode">${m.icon} ${m.label}</div>
+              ${isBest ? '<span class="eco-badge">🌿 Best choice</span>' : ''}
+            </div>
+            <div class="card-stats">
+              <div class="stat">
+                <div class="stat-val">${Math.round(r.distance * 10) / 10} <small style="font-size:11px;font-weight:400">km</small></div>
+                <div class="stat-lbl">Distance</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val">${fmtTime(r.duration)}</div>
+                <div class="stat-lbl">Duration</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val ${co2Display === '0' ? 'green' : 'red'}">${co2Display}g</div>
+                <div class="stat-lbl">CO₂</div>
+              </div>
+            </div>
+            ${r.savings > 0 ? `
+              <div class="savings-bar">
+                <div class="savings-fill" style="width:${barWidth}%"></div>
+              </div>
+              <div class="savings-text">Saves <span>${savingsDisplay}g CO₂</span> vs driving (${savingsPct}% less)</div>
+            ` : r.mode === 'driving' ? `
+              <div class="savings-text" style="color:var(--red)">Baseline — highest emissions</div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      resultsEl.innerHTML = `<div class="route-cards">${cards}</div>`;
+
+    } catch (err) {
+      resultsEl.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--red)">⚠️ ${err.message}</div>`;
+    }
+  }
+
+  // Allow pressing Enter to trigger route search
+  ['origin','destination'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') findRoutes();
+    });
+  });
+</script>
+</body>
+</html>
