@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoRoute — Eco-Friendly Navigation</title>
+
+  <!-- Fonts from File 1 -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Variables (from EcoRoute File 1) ── */
+    :root {
+      --bg:         #0d1a12;
+      --surface:    #132019;
+      --surface2:   #1a2d21;
+      --border:     rgba(255,255,255,0.07);
+      --green:      #4ade80;
+      --green-dim:  #22c55e;
+      --green-glow: rgba(74,222,128,0.15);
+      --amber:      #fbbf24;
+      --red:        #f87171;
+      --text:       #f0faf3;
+      --muted:      #7aab8a;
+      --panel-w:    400px;
+      --radius:     16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--panel-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Left Panel ── */
+    #panel {
+      width: var(--panel-w);
+      min-width: var(--panel-w);
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    /* ── Header ── */
+    .panel-header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(160deg, #1a3a24 0%, var(--surface) 100%);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--green);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .logo-text span { color: var(--green); }
+
+    .tagline {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      padding-left: 46px;
+    }
+
+    /* ── Sections ── */
+    .search-section,
+    .results-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-section {
+      flex: 1;
+      border-bottom: none;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* ── Inputs ── */
+    .input-group {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .input-dot {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .dot-origin { background: var(--green); }
+    .dot-dest   { background: var(--amber); border-radius: 3px; }
+
+    .route-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px 12px 34px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .route-input::placeholder { color: var(--muted); }
+
+    .route-input:focus {
+      border-color: var(--green-dim);
+      box-shadow: 0 0 0 3px var(--green-glow);
+    }
+
+    .connector {
+      position: absolute;
+      left: 18px;
+      top: 100%;
+      width: 2px;
+      height: 10px;
+      background: var(--border);
+      z-index: 1;
+    }
+
+    /* ── Row inputs ── */
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .small-input-wrap { display: flex; flex-direction: column; gap: 5px; }
+    .small-label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0.3px; }
+
+    .small-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .small-input:focus {
+      border-color: var(--green-dim);
+      box-shadow: 0 0 0 3px var(--green-glow);
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-route {
+      padding: 13px;
+      background: var(--green);
+      color: #0d1a12;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    }
+
+    .btn-route:hover {
+      background: #86efac;
+      box-shadow: 0 4px 20px var(--green-glow);
+    }
+
+    .btn-route:active { transform: scale(0.98); }
+
+    .btn-clear {
+      padding: 13px 16px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Trip meta pills ── */
+    .trip-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .trip-pill {
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.2);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .trip-pill span { color: var(--text); font-weight: 600; }
+
+    /* ── Note ── */
+    .note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+
+    /* ── Route Cards (results) ── */
+    .route-cards { display: flex; flex-direction: column; gap: 10px; }
+
+    .route-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: default;
+      transition: all 0.2s;
+      animation: slideIn 0.3s ease forwards;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+
+    .route-card:nth-child(1) { animation-delay: 0.05s; }
+    .route-card:nth-child(2) { animation-delay: 0.10s; }
+    .route-card:nth-child(3) { animation-delay: 0.15s; }
+    .route-card:nth-child(4) { animation-delay: 0.20s; }
+    .route-card:nth-child(5) { animation-delay: 0.25s; }
+
+    .route-card.eco-best {
+      border-color: var(--green-dim);
+      background: linear-gradient(135deg, rgba(74,222,128,0.08) 0%, var(--surface2) 100%);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-mode {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .eco-badge {
+      background: var(--green);
+      color: #0d1a12;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .score-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .card-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      text-align: center;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 8px 4px;
+    }
+
+    .stat-val {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .stat-val.green { color: var(--green); }
+    .stat-val.amber { color: var(--amber); }
+    .stat-val.red   { color: var(--red); }
+
+    .stat-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .savings-bar {
+      margin-top: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 20px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .savings-fill {
+      height: 100%;
+      border-radius: 20px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .savings-fill.green { background: linear-gradient(90deg, var(--green-dim), var(--green)); }
+    .savings-fill.amber { background: linear-gradient(90deg, #d97706, var(--amber)); }
+    .savings-fill.red   { background: linear-gradient(90deg, #dc2626, var(--red)); }
+
+    .savings-text {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .savings-text .highlight { color: var(--green); font-weight: 600; }
+    .savings-text .highlight.red { color: var(--red); }
+
+    /* ── Driving Routes Section ── */
+    .driving-routes-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .driving-route-cards { display: flex; flex-direction: column; gap: 8px; }
+
+    .driving-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid transparent;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      animation: slideIn 0.3s ease forwards;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .driving-card:hover { filter: brightness(1.1); }
+    .driving-card.fastest   { border-left-color: #60a5fa; background: linear-gradient(135deg, rgba(96,165,250,0.07) 0%, var(--surface2) 100%); }
+    .driving-card.eco-drive { border-left-color: var(--green-dim); background: linear-gradient(135deg, rgba(74,222,128,0.08) 0%, var(--surface2) 100%); }
+    .driving-card.alternate { border-left-color: #a78bfa; background: linear-gradient(135deg, rgba(167,139,250,0.06) 0%, var(--surface2) 100%); }
+
+    .driving-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .driving-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .route-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-fastest { background: #60a5fa; }
+    .dot-eco     { background: var(--green); }
+    .dot-alt     { background: #a78bfa; }
+
+    .driving-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .tag-fastest { background: rgba(96,165,250,0.2);  color: #93c5fd; }
+    .tag-eco     { background: var(--green-glow);      color: var(--green); }
+    .tag-alt     { background: rgba(167,139,250,0.15); color: #c4b5fd; }
+
+    .driving-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .driving-stat {
+      text-align: center;
+      background: rgba(0,0,0,0.15);
+      border-radius: 7px;
+      padding: 6px 4px;
+    }
+
+    .driving-stat-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .driving-stat-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    /* ── Results placeholder ── */
+    #results-placeholder {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--muted);
+    }
+
+    #results-placeholder .big-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    #results-placeholder p { font-size: 13px; line-height: 1.6; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    .panel-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Right: Map pane ── */
+    #map-pane {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .map-header h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    #map {
+      flex: 1;
+    }
+
+    /* ── Google autocomplete dropdown override ── */
+    .pac-container {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 10px !important;
+      margin-top: 4px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+      font-family: 'DM Sans', sans-serif !important;
+    }
+
+    .pac-item {
+      padding: 8px 14px !important;
+      color: var(--muted) !important;
+      font-size: 13px !important;
+      border-top: 1px solid var(--border) !important;
+      cursor: pointer;
+    }
+
+    .pac-item:hover { background: rgba(74,222,128,0.08) !important; }
+    .pac-item-query { color: var(--text) !important; }
+    .pac-icon { display: none !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      #panel { width: 100%; min-width: unset; }
+      #map-pane { position: static; height: 400px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ══ LEFT PANEL ══ -->
+  <aside id="panel">
+
+    <div class="panel-header">
+      <div class="logo">
+        <div class="logo-icon">🌿</div>
+        <div class="logo-text">Eco<span>Route</span></div>
+      </div>
+      <div class="tagline">Navigate smarter. Breathe easier.</div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-section">
+      <div class="section-label">Plan your trip</div>
+
+      <div class="input-group" style="margin-bottom:16px;">
+        <span class="input-dot dot-origin"></span>
+        <input id="origin" class="route-input" type="text" placeholder="Starting point" autocomplete="off" />
+        <div class="connector"></div>
+      </div>
+
+      <div class="input-group" style="margin-bottom:14px;">
+        <span class="input-dot dot-dest"></span>
+        <input id="destination" class="route-input" type="text" placeholder="Destination" autocomplete="off" />
+      </div>
+
+      <div class="input-row">
+        <div class="small-input-wrap">
+          <span class="small-label">Unit</span>
+          <select id="unit" class="small-input">
+            <option value="mi" selected>miles</option>
+            <option value="km">km</option>
+          </select>
+        </div>
+        <div class="small-input-wrap">
+          <span class="small-label">Bus passengers</span>
+          <input id="busPassengers" type="number" min="1" step="1" value="1" class="small-input" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-route" id="routeBtn">Find Eco Routes →</button>
+        <button class="btn-clear" id="clearBtn">✕</button>
+      </div>
+
+      <div id="tripMeta" class="trip-meta" style="display:none">
+        <div class="trip-pill">📍 <span id="metaDistance"></span></div>
+        <div class="trip-pill">⏱ <span id="metaDuration"></span></div>
+      </div>
+
+      <p class="note" id="note">Tip: pick from the address dropdown for best results.</p>
+    </div>
+
+    <!-- Driving Routes -->
+    <div class="driving-routes-section">
+      <div class="section-label">Driving routes</div>
+      <div id="driving-routes"><div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px;">Routes will appear here after searching.</div></div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section">
+      <div class="section-label">Emissions comparison</div>
+      <div id="results">
+        <div id="results-placeholder">
+          <div class="big-icon">🗺️</div>
+          <p>Enter a start and end point to compare carbon impact across all transport modes.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      Emission factors: EPA / BEIS 2023 guidelines.<br>
+      Baseline comparison = average petrol car.
+    </div>
+
+  </aside>
+
+  <!-- ══ RIGHT: MAP ══ -->
+  <div id="map-pane">
+    <div class="map-header">
+      <h2>Route Map</h2>
+    </div>
+    <div id="map"></div>
+  </div>
+
+</div>
+
+<script>
+  /****************************
+   * Emissions model
+   ****************************/
+  const KG_PER_TREE_YEAR = 21;
+
+  const MODES = [
+    { key: "gasCar", name: "Gas Car",            icon: "🚗" },
+    { key: "ev",     name: "Electric Vehicle",   icon: "⚡" },
+    { key: "bus",    name: "Public Transit",      icon: "🚌" },
+    { key: "bike",   name: "Cycling",             icon: "🚴" },
+    { key: "walk",   name: "Walking",             icon: "🚶" },
+  ];
+
+  const FACTORS = {
+    gasCar: { kgPerMile: 0.404, costPerMile: 0.17 },
+    ev:     { kgPerMile: 0.160, costPerMile: 0.06 },
+    bus:    { kgPerMile: 0.089, costPerMile: 0.10 },
+    bike:   { kgPerMile: 0.0,   costPerMile: 0.01 },
+    walk:   { kgPerMile: 0.0,   costPerMile: 0.00 },
+  };
+
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+  function metersToMiles(m) { return m / 1609.344; }
+  function metersToKm(m) { return m / 1000; }
+
+  function scoreColor(score) {
+    if (score >= 75) return "green";
+    if (score >= 45) return "amber";
+    return "red";
+  }
+
+  function scoreHex(score) {
+    if (score >= 75) return "var(--green)";
+    if (score >= 45) return "var(--amber)";
+    return "var(--red)";
+  }
+
+  function compute(distanceMiles, busPassengers) {
+    const rows = MODES.map(m => {
+      const f = FACTORS[m.key];
+      let kg   = f.kgPerMile * distanceMiles;
+      let cost = f.costPerMile * distanceMiles;
+
+      if (m.key === "bus") {
+        const p = clamp(busPassengers || 1, 1, 80);
+        kg = kg / p;
+      }
+      return { ...m, kg, cost };
+    });
+
+    const maxKg = Math.max(...rows.map(r => r.kg));
+    const minKg = Math.min(...rows.map(r => r.kg));
+
+    rows.forEach(r => {
+      const denom = maxKg - minKg;
+      const raw = denom === 0 ? 100 : 100 * (1 - (r.kg - minKg) / denom);
+      r.score = Math.round(clamp(raw, 0, 100));
+      r.trees = r.kg / KG_PER_TREE_YEAR;
+      r.savingsVsWorst = maxKg - r.kg;
+      r.barPct = maxKg === 0 ? 0 : Math.round((r.kg / maxKg) * 100);
+    });
+
+    rows.sort((a, b) => a.kg - b.kg);
+    return rows;
+  }
+
+  function renderResults(distanceMiles) {
+    const busPassengers = Number(document.getElementById("busPassengers").value);
+    const rows = compute(distanceMiles, busPassengers);
+    const unit = document.getElementById("unit").value;
+
+    const resultsEl = document.getElementById("results");
+    const maxKg = Math.max(...rows.map(r => r.kg));
+
+    resultsEl.innerHTML = `<div class="route-cards">${rows.map((r, i) => {
+      const isBest = i === 0 && r.savingsVsWorst > 0;
+      const cls = scoreColor(r.score);
+      const hex = scoreHex(r.score);
+      const kg0 = r.kg < 0.001;
+
+      return `
+        <div class="route-card ${isBest ? 'eco-best' : ''}">
+          <div class="card-top">
+            <div class="card-mode">${r.icon} ${r.name}</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              ${isBest ? '<span class="eco-badge">🌿 Best choice</span>' : ''}
+              <span class="score-badge" style="background:${hex};color:#0d1a12">${r.score}</span>
+            </div>
+          </div>
+
+          <div class="card-stats">
+            <div class="stat">
+              <div class="stat-val ${kg0 ? 'green' : r.score >= 75 ? 'green' : r.score >= 45 ? 'amber' : 'red'}">
+                ${kg0 ? '0g' : r.kg < 1 ? `${(r.kg*1000).toFixed(0)}g` : `${r.kg.toFixed(2)}kg`}
+              </div>
+              <div class="stat-lbl">CO₂</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">$${r.cost.toFixed(2)}</div>
+              <div class="stat-lbl">Est. Cost</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val green">${r.savingsVsWorst < 0.001 ? '—' : r.savingsVsWorst < 1 ? `${(r.savingsVsWorst*1000).toFixed(0)}g` : `${r.savingsVsWorst.toFixed(2)}kg`}</div>
+              <div class="stat-lbl">CO₂ Saved</div>
+            </div>
+          </div>
+
+          <div class="savings-bar">
+            <div class="savings-fill ${cls}" style="width:${r.barPct}%"></div>
+          </div>
+
+          <div class="savings-text">
+            ${r.kg === 0
+              ? `<span class="highlight">Zero emissions</span> — perfectly clean`
+              : r.score >= 75
+              ? `Trees to offset/yr: <span class="highlight">${r.trees.toFixed(2)}</span>`
+              : `<span class="highlight red">${r.trees.toFixed(2)} trees/yr to offset</span>`
+            }
+          </div>
+        </div>
+      `;
+    }).join('')}</div>`;
+  }
+
+  /****************************
+   * Google Maps wiring
+   ****************************/
+  let map, directionsService;
+  let renderers = [];
+  let originAC, destAC;
+
+  // Route colors: blue=fastest, green=eco/shortest, purple/pink=alternates
+  const ROUTE_COLORS = ["#60a5fa", "#4ade80", "#a78bfa", "#f472b6"];
+
+  const elNote     = document.getElementById("note");
+  const elTripMeta = document.getElementById("tripMeta");
+  const elMetaDist = document.getElementById("metaDistance");
+  const elMetaDur  = document.getElementById("metaDuration");
+
+  function setNote(msg) { elNote.textContent = msg || ""; }
+
+  function clearRenderers() {
+    renderers.forEach(r => r.setMap(null));
+    renderers = [];
+  }
+
+  function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: 39.5, lng: -98.35 },
+      zoom: 4,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+
+    directionsService = new google.maps.DirectionsService();
+
+    const originInput = document.getElementById("origin");
+    const destInput   = document.getElementById("destination");
+
+    originAC = new google.maps.places.Autocomplete(originInput, {
+      fields: ["place_id", "formatted_address", "geometry", "name"],
+    });
+    destAC = new google.maps.places.Autocomplete(destInput, {
+      fields: ["place_id", "formatted_address", "geometry", "name"],
+    });
+
+    originInput.addEventListener("keydown", e => { if (e.key === "Enter") routeAndCompare(); });
+    destInput.addEventListener("keydown",   e => { if (e.key === "Enter") routeAndCompare(); });
+
+    document.getElementById("routeBtn").addEventListener("click", routeAndCompare);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+  }
+
+  function clearAll() {
+    document.getElementById("origin").value = "";
+    document.getElementById("destination").value = "";
+    document.getElementById("results").innerHTML = '<div id="results-placeholder"><div class="big-icon">&#128506;</div><p>Enter a start and end point to compare carbon impact across all transport modes.</p></div>';
+    document.getElementById("driving-routes").innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px;">Routes will appear here after searching.</div>';
+    elTripMeta.style.display = "none";
+    setNote("Tip: pick from the address dropdown for best results.");
+    clearRenderers();
+  }
+
+  // Click a card to highlight that route on the map
+  function highlightRoute(idx) {
+    renderers.forEach((r, i) => {
+      r.setOptions({
+        polylineOptions: {
+          strokeColor: ROUTE_COLORS[i] || "#94a3b8",
+          strokeWeight: i === idx ? 6 : 3,
+          strokeOpacity: i === idx ? 0.95 : 0.35,
+        }
+      });
+    });
+    document.querySelectorAll(".driving-card").forEach((c, i) => {
+      c.style.opacity = i === idx ? "1" : "0.6";
+      c.style.transform = i === idx ? "scale(1.01)" : "scale(1)";
+    });
+  }
+
+  function routeAndCompare() {
+    const originText = document.getElementById("origin").value.trim();
+    const destText   = document.getElementById("destination").value.trim();
+    const unit       = document.getElementById("unit").value;
+
+    if (!originText || !destText) {
+      setNote("Please enter both a start and destination.");
+      return;
+    }
+
+    document.getElementById("results").innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted)"><span class="spinner"></span>Finding routes...</div>';
+    document.getElementById("driving-routes").innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted)"><span class="spinner"></span>Fetching alternatives...</div>';
+    setNote("");
+    elTripMeta.style.display = "none";
+    clearRenderers();
+
+    directionsService.route(
+      {
+        origin: originText,
+        destination: destText,
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: true,
+      },
+      (result, status) => {
+        if (status !== "OK" || !result || !result.routes || !result.routes.length) {
+          document.getElementById("results").innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--red)">Could not route that. Try selecting from the dropdown.</div>';
+          document.getElementById("driving-routes").innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--red)">No routes found.</div>';
+          return;
+        }
+
+        const routes = result.routes;
+
+        // Find fastest (lowest duration) and eco (lowest distance)
+        let fastestIdx = 0, ecoIdx = 0;
+        let minDuration = Infinity, minDistance = Infinity;
+        routes.forEach(function(r, i) {
+          var dur  = r.legs[0].duration.value;
+          var dist = r.legs[0].distance.value;
+          if (dur  < minDuration) { minDuration = dur;  fastestIdx = i; }
+          if (dist < minDistance) { minDistance = dist; ecoIdx = i; }
+        });
+
+        // If fastest === eco and there are alternatives, re-assign eco to next shortest
+        if (fastestIdx === ecoIdx && routes.length > 1) {
+          var bestAlt = -1, bestDist = Infinity;
+          routes.forEach(function(r, i) {
+            if (i !== fastestIdx && r.legs[0].distance.value < bestDist) {
+              bestDist = r.legs[0].distance.value;
+              bestAlt = i;
+            }
+          });
+          if (bestAlt !== -1) ecoIdx = bestAlt;
+        }
+
+        // Draw all routes on map (fastest on top, boldest)
+        routes.forEach(function(route, i) {
+          var renderer = new google.maps.DirectionsRenderer({
+            map: map,
+            directions: result,
+            routeIndex: i,
+            suppressMarkers: i !== fastestIdx,
+            suppressInfoWindows: true,
+            polylineOptions: {
+              strokeColor: ROUTE_COLORS[i] || "#94a3b8",
+              strokeWeight: i === fastestIdx ? 6 : 3,
+              strokeOpacity: i === fastestIdx ? 0.95 : 0.45,
+            },
+          });
+          renderers.push(renderer);
+        });
+
+        // Trip meta pills — use fastest route
+        var fastestLeg   = routes[fastestIdx].legs[0];
+        var meters       = fastestLeg.distance.value;
+        var distMiles    = metersToMiles(meters);
+        var distDisplay  = unit === "km" ? (metersToKm(meters).toFixed(2) + " km") : (distMiles.toFixed(2) + " mi");
+
+        elMetaDist.textContent = distDisplay;
+        elMetaDur.textContent  = fastestLeg.duration.text;
+        elTripMeta.style.display = "flex";
+
+        renderDrivingCards(routes, fastestIdx, ecoIdx, unit);
+        renderResults(distMiles);
+        setNote("");
+      }
+    );
+  }
+
+  function renderDrivingCards(routes, fastestIdx, ecoIdx, unit) {
+    var el    = document.getElementById("driving-routes");
+    var cards = routes.map(function(route, i) {
+      var leg       = route.legs[0];
+      var meters    = leg.distance.value;
+      var distMiles = metersToMiles(meters);
+
+      var isFastest = (i === fastestIdx);
+      var isEco     = (i === ecoIdx);
+      var isBoth    = isFastest && isEco;
+
+      var roleClass, dotClass, tagClass, tagLabel, titleText;
+
+      if (isBoth) {
+        roleClass = "fastest"; dotClass = "dot-fastest"; tagClass = "tag-fastest";
+        tagLabel = "Fastest &amp; Cleanest"; titleText = "&#9889; Fastest &amp; Cleanest";
+      } else if (isFastest) {
+        roleClass = "fastest"; dotClass = "dot-fastest"; tagClass = "tag-fastest";
+        tagLabel = "Fastest"; titleText = "&#9889; Fastest Route";
+      } else if (isEco) {
+        roleClass = "eco-drive"; dotClass = "dot-eco"; tagClass = "tag-eco";
+        tagLabel = "Cleanest Drive"; titleText = "&#127807; Cleanest Route";
+      } else {
+        roleClass = "alternate"; dotClass = "dot-alt"; tagClass = "tag-alt";
+        tagLabel = "Alt " + (i + 1); titleText = "&#128739; Alt Route " + (i + 1);
+      }
+
+      var distDisplay = unit === "km"
+        ? (metersToKm(meters).toFixed(1) + " km")
+        : (distMiles.toFixed(1) + " mi");
+
+      var co2kg      = distMiles * 0.404;
+      var co2Display = co2kg < 1 ? ((co2kg * 1000).toFixed(0) + "g") : (co2kg.toFixed(2) + "kg");
+      var co2Color   = isEco ? "var(--green)" : isFastest ? "var(--amber)" : "var(--muted)";
+
+      return '<div class="driving-card ' + roleClass + '" onclick="highlightRoute(' + i + ')" style="animation-delay:' + (i*0.07) + 's">' +
+        '<div class="driving-card-top">' +
+          '<div class="driving-card-title"><span class="route-dot ' + dotClass + '"></span>' + titleText + '</div>' +
+          '<span class="driving-tag ' + tagClass + '">' + tagLabel + '</span>' +
+        '</div>' +
+        '<div class="driving-stats">' +
+          '<div class="driving-stat"><div class="driving-stat-val">' + distDisplay + '</div><div class="driving-stat-lbl">Distance</div></div>' +
+          '<div class="driving-stat"><div class="driving-stat-val">' + leg.duration.text + '</div><div class="driving-stat-lbl">Duration</div></div>' +
+          '<div class="driving-stat"><div class="driving-stat-val" style="color:' + co2Color + '">' + co2Display + '</div><div class="driving-stat-lbl">CO2 (car)</div></div>' +
+        '</div>' +
+        '</div>';
+    }).join("");
+
+    el.innerHTML = '<div class="driving-route-cards">' + cards + '</div>';
+  }
+
+  window.initMap = initMap;
+</script>
+
+<!--
+  Replace YOUR_API_KEY_HERE with your Google Maps API key.
+  Required APIs: Maps JavaScript API, Places API, Directions API.
+-->
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBE68r3pm1I4hu0zn65s7mXK82d9Zh3q5U&libraries=places&callback=initMap"
+  async
+  defer
+></script>
+
+</body>
+</html>
