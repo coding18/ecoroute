@@ -1,22 +1,22 @@
 EcoRoute 🌿 — Carbon-Smart Route Comparison
 
-EcoRoute is a simple web app that helps you compare travel routes based on their environmental impact. Instead of just showing the fastest way to get somewhere, it lets you see how much carbon different options produce so you can make a smarter choice before you commute.
+EcoRoute is a web app that helps you see the environmental impact of your trip before you go. Instead of only showing the fastest route, it compares routes and transportation options based on estimated carbon emissions so you can make a more informed decision.
 
-It was built for a hackathon, so it’s lightweight, quick to run, and focused on clear comparisons.
+We built this during a hackathon to make sustainability data simple, visible, and actually useful in everyday travel.
 
-Features
+What it does
 
-Plan a trip by entering an origin and destination
+Enter an origin and destination to plan a trip
 
-Address autocomplete suggestions
+Get address autocomplete suggestions
 
-View multiple driving routes on an interactive map
+View multiple route options on an interactive map
 
-See which route is fastest and which is more carbon-efficient
+See which route is fastest and which is more eco-friendly
 
-Click a route to highlight it on the map
+Click a route to highlight it
 
-Compare emissions across transportation modes:
+Compare emissions across:
 
 Gas car
 
@@ -28,18 +28,10 @@ Cycling
 
 Walking
 
-You’ll also see simple sustainability metrics like estimated CO₂ emissions, a green score, estimated cost, and rough offset comparisons.
+For each option, EcoRoute shows estimated CO₂ emissions, a simple green score, approximate cost, and how much carbon you save compared to higher-impact choices.
 
-Tech Stack
+Why we built it
 
-Frontend: HTML, CSS, and vanilla JavaScript
+Most navigation apps optimize for time. We wanted to add another dimension — climate impact — and make it easy to understand without needing technical knowledge.
 
-Map: Leaflet with OpenStreetMap tiles
-
-Route decoding: Mapbox polyline
-
-Backend: Cloudflare Worker API
-
-/api/routes for routing data
-
-/api/places for autocomplete
+The goal was to show that small choices (like choosing transit or a shorter route) can add up.
