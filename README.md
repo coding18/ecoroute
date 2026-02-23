@@ -1,49 +1,45 @@
-# EcoRoute 🌿 — Carbon‑Smart Route Comparison
+EcoRoute 🌿 — Carbon-Smart Route Comparison
 
-EcoRoute is a sustainability‑focused travel comparison web app that makes **carbon emissions visible before you commute**. Enter an origin + destination, view **multiple driving route alternatives on an interactive map**, and compare estimated emissions (and cost) across common transportation modes.
+EcoRoute is a simple web app that helps you compare travel routes based on their environmental impact. Instead of just showing the fastest way to get somewhere, it lets you see how much carbon different options produce so you can make a smarter choice before you commute.
 
-> Built for hackathon/demo use: fast, lightweight, and easy to run locally.
+It was built for a hackathon, so it’s lightweight, quick to run, and focused on clear comparisons.
 
----
+Features
 
-## ✨ Features
+Plan a trip by entering an origin and destination
 
-- **Origin → Destination** trip planning
-- **Autocomplete address suggestions** (custom dropdown)
-- **Multiple driving route alternatives** with:
-  - Fastest route label
-  - “Carbon‑optimal” route label (distance + traffic proxy)
-  - Click a route card to **highlight it on the map**
-- **Interactive map** using **Leaflet + OpenStreetMap tiles**
-- **Emissions comparison** across modes:
-  - 🚗 Gas Car
-  - ⚡ Electric Vehicle
-  - 🚌 Public Transit (per‑passenger)
-  - 🚴 Cycling
-  - 🚶 Walking
-- Clear sustainability metrics:
-  - Estimated CO₂
-  - Green Score (0–100)
-  - Estimated cost
-  - CO₂ saved vs worst option
-  - Trees/year offset estimate (rough)
+Address autocomplete suggestions
 
----
+View multiple driving routes on an interactive map
 
-## 🧱 Tech Stack
+See which route is fastest and which is more carbon-efficient
 
-- **Frontend:** HTML + CSS + Vanilla JavaScript (single file)
-- **Map rendering:** Leaflet + OpenStreetMap tiles
-- **Route decoding:** `@mapbox/polyline`
-- **Routing + autocomplete data:** Cloudflare Worker API (backend)
-  - `GET /api/routes`
-  - `GET /api/places`
+Click a route to highlight it on the map
 
----
+Compare emissions across transportation modes:
 
-## 🚀 Getting Started
+Gas car
 
-### 1) Clone the repo
-```bash
-git clone <your-repo-url>
-cd <your-repo-folder>
+Electric vehicle
+
+Public transit
+
+Cycling
+
+Walking
+
+You’ll also see simple sustainability metrics like estimated CO₂ emissions, a green score, estimated cost, and rough offset comparisons.
+
+Tech Stack
+
+Frontend: HTML, CSS, and vanilla JavaScript
+
+Map: Leaflet with OpenStreetMap tiles
+
+Route decoding: Mapbox polyline
+
+Backend: Cloudflare Worker API
+
+/api/routes for routing data
+
+/api/places for autocomplete
